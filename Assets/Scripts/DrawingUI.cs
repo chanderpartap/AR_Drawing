@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR.ARFoundation;
+using UnityEngine.XR.ARSubsystems;
 
 public class DrawingUI : MonoBehaviour
 {
@@ -8,6 +10,8 @@ public class DrawingUI : MonoBehaviour
     public DrawingPen pen;
     public GameObject surfaceScanPanel;
     public GameObject drawingPanel;
+    public ARPlaneManager arPlaneManager;
+    public bool ModeAR;
     #endregion
 
     #region PRIVATES
@@ -19,10 +23,21 @@ public class DrawingUI : MonoBehaviour
     {
         // Define the boundry of the drawing pen prevent conflict UI touches
         SetPenDrawingBound();
+        if (ModeAR)
+        {
+            // 1
+            SetdrawingUIVisible(false);
+            SetCoachingUIVisible(true);
 
-        // Setup for Non AR. Directly show the drawing UI 
-        SetdrawingUIVisible(true);
-        SetCoachingUIVisible(false);
+            // 2
+            arPlaneManager.planesChanged += ChangeInPlanes;
+        }
+        else
+        {
+            // 3
+            SetdrawingUIVisible(true);
+            SetCoachingUIVisible(false);
+        }
     }
     void SetPenDrawingBound()
     {
@@ -72,6 +87,18 @@ public class DrawingUI : MonoBehaviour
         if (unitText != null)
         {
             unitText.text = string.Format("{0:0.0} cm", (value * 0.1f));
+        }
+    }
+
+    //Plane Changed
+    private void ChangeInPlanes(ARPlanesChangedEventArgs planeEvent)
+    {
+        if (planeEvent.added.Count > 0 || planeEvent.updated.Count > 0)
+        {
+            SetdrawingUIVisible(true);
+            SetCoachingUIVisible(false);
+
+            arPlaneManager.planesChanged -= ChangeInPlanes;
         }
     }
 }

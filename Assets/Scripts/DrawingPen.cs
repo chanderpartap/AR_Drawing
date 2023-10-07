@@ -1,5 +1,7 @@
 using UnityEngine;
-
+using System.Collections.Generic;
+using UnityEngine.XR.ARFoundation;
+using UnityEngine.XR.ARSubsystems;
 public class DrawingPen : MonoBehaviour
 {
     #region PUBLIC VARS
@@ -7,6 +9,8 @@ public class DrawingPen : MonoBehaviour
     new public Camera camera;
     public DrawingLine linePrefab = null;
     public Gradient[] colorTheme = null;
+    public ARRaycastManager raycastManager;
+    public bool modeAR = false;
     public float drawingBound = 0;      // The lower bound where touch is valid
     #endregion
 
@@ -76,13 +80,19 @@ public class DrawingPen : MonoBehaviour
             Destroy(line.gameObject);
         }
     }
-    void SetupRaycastLogic(DrawingLine doodleLine)
+    void SetupRaycastLogic(DrawingLine drawingLine)
     {
-        doodleLine.raycastDelegate = GetNonArRaycastLogic;
-
-        doodleLine.gameObject.SetActive(true);
+        if (modeAR)
+        {
+            drawingLine.raycastDelegate = ARRaycastLogic;
+        }
+        else
+        {
+            drawingLine.raycastDelegate = NonArRaycastLogic;
+        }
+        drawingLine.gameObject.SetActive(true);
     }
-    bool GetNonArRaycastLogic(out Vector3 hitPosition)
+    bool NonArRaycastLogic(out Vector3 hitPosition)
     {
         var point = Input.mousePosition;
 
@@ -101,4 +111,22 @@ public class DrawingPen : MonoBehaviour
             return false;
         }
     }
+    //AR Raycast Logic
+    bool ARRaycastLogic(out Vector3 hitPosition)
+    {
+        var hits = new List<ARRaycastHit>();
+        bool hasHit = raycastManager.Raycast(Input.mousePosition, hits, TrackableType.PlaneWithinInfinity);
+
+        if (hasHit == false || hits.Count == 0)
+        {
+            hitPosition = Vector3.zero;
+            return false;
+        }
+        else
+        {
+            hitPosition = hits[0].pose.position;
+            return true;
+        }
+    }
+
 }
