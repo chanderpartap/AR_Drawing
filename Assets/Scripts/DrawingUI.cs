@@ -37,7 +37,7 @@ public class DrawingUI : MonoBehaviour
             return;
         }
 
-        pen.drawingBound = canvas.scaleFactor * UIHeight;
+        pen.drawingBound = (canvas.scaleFactor * UIHeight);
     }
     public void OnClearClicked()
     {
